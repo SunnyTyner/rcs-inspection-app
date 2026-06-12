@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RCS Field Inspection App v4 - iPad Safe</title>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#f6f7fb;color:#172033;font-family:Arial,Helvetica,sans-serif} header{position:sticky;top:0;background:#0d1b3d;color:white;padding:12px;z-index:5} h1{font-size:18px;margin:0 0 4px} header p{font-size:12px;margin:0;color:#dbe4ff} main{max-width:980px;margin:0 auto;padding:12px} .bar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0} button,.btn{border:0;border-radius:8px;padding:10px 12px;background:#1f5eff;color:white;font-weight:700;text-decoration:none} button.secondary{background:#e7eaf4;color:#172033} button.danger{background:#b42318} section{background:white;border:1px solid #d8ddea;border-radius:12px;margin:12px 0;padding:14px} h2{font-size:18px;margin:0 0 10px;border-bottom:1px solid #d8ddea;padding-bottom:8px} h3{font-size:15px;margin:18px 0 8px} .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px} .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px} label{display:block;font-size:13px;font-weight:700;margin-bottom:5px} input,select,textarea{width:100%;border:1px solid #bcc5d6;border-radius:8px;padding:9px;background:white;font-size:16px} textarea{min-height:64px;resize:vertical} .field,.qfield{margin-bottom:10px} .full{grid-column:1/-1} .note{background:#eef4ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:8px;padding:10px;margin:8px 0} .warn{background:#fff7ed;border:1px solid #fed7aa;color:#7c2d12;border-radius:8px;padding:10px;margin:8px 0} .photoBox{border:1px dashed #98a4bc;border-radius:10px;padding:10px;background:#fafbff;margin:8px 0} .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:8px} .thumb{border:1px solid #d8ddea;border-radius:8px;background:white;padding:6px} .thumb img{width:100%;height:90px;object-fit:cover;border-radius:5px} .thumb span{font-size:11px;display:block;word-break:break-word;margin-top:3px} .thumb button{font-size:11px;padding:5px 7px;background:#6b7280;margin-top:4px} .checkrow{display:flex;gap:8px;align-items:center} .checkrow input{width:auto} #report{display:none} @media(max-width:720px){.grid,.grid3{grid-template-columns:1fr}}
+.reportPage{background:white;color:#111;font-family:Arial,Helvetica,sans-serif;width:8.5in;min-height:10.5in;margin:0 auto 18px;padding:.35in;border:1px solid #d0d0d0;font-size:10.5px;line-height:1.25} .fieldLine{border-bottom:1px solid #111;min-height:15px;display:inline-block;padding:0 3px;vertical-align:bottom} .origTitle{font-weight:700;margin:10px 0 3px;text-transform:uppercase} .origSub{font-size:9.5px;font-weight:700;margin:3px 0 8px} table{width:100%;border-collapse:collapse;margin:4px 0 8px;table-layout:fixed} th,td{border:1px solid #111;padding:3px 4px;vertical-align:top;font-size:10px} th{font-weight:700;text-align:center;background:white} .qLetter{width:.35in;text-align:center;font-weight:700} .qAnswer{width:2.3in;min-height:18px} .photoChecklist{columns:2;column-gap:.35in;margin-top:6px} .checkItem{break-inside:avoid;font-size:10px;margin:2px 0} .box{display:inline-block;width:11px;height:11px;border:1px solid #111;margin-right:4px;text-align:center;line-height:10px;font-size:9px} .photoGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px} .photoCard{break-inside:avoid;border:1px solid #111;padding:5px;min-height:2.2in} .photoCard img{width:100%;max-height:2.55in;object-fit:contain;display:block;margin:4px 0} .caption{font-weight:700;font-size:10px} .small{font-size:10px;color:#5b6475}
+@media print{@page{size:letter;margin:.25in} body{background:white} header,#formArea,.hidePrint{display:none!important} #report{display:block!important} main{max-width:none;padding:0} .reportPage{width:auto;min-height:auto;margin:0;padding:0;border:0;page-break-after:always} .reportPage:last-child{page-break-after:auto} .photoCard{page-break-inside:avoid} .pageBreak{page-break-before:always}}
+</style>
+</head><body>
+<header><h1>RCS Rent Analysis Field Inspection App v4</h1><p>iPad-safe version: lettered questions and photo uploads are hard-coded into the page.</p></header>
+<main>
+<div class="bar hidePrint"><button onclick="saveData()">Save</button><button onclick="loadData()" class="secondary">Load Saved</button><button onclick="buildReport()">Create PDF / Print</button><button onclick="exportJSON()" class="secondary">Export Backup JSON</button><label class="btn secondary">Import Backup JSON <input type="file" accept="application/json" onchange="importJSON(event)" style="display:none"></label><button onclick="clearAll()" class="danger">Clear</button></div>
+<div class="warn hidePrint"><strong>iPad note:</strong> Open this file in Safari or Chrome, not Files Preview/Quick Look. Files Preview can show the top of the page but block the working form/photo features.</div>
+<form id="formArea">
+<section><h2>1. Inspector and Subject Information</h2><div class="grid">
+<div class="field"><label>Inspector Name</label><input name="inspectorName"></div><div class="field"><label>Date</label><input name="inspectionDate" type="date"></div>
+<div class="field"><label>Name of Subject</label><input name="subjectName"></div><div class="field"><label>Phone #</label><input name="phone"></div>
+<div class="field full"><label>Address</label><input name="address"></div><div class="field"><label>City</label><input name="city"></div><div class="field"><label>State</label><input name="state"></div><div class="field"><label>Zip</label><input name="zip"></div><div class="field"><label>County</label><input name="county"></div><div class="field"><label>On Site Contact</label><input name="contact"></div>
+<div class="field full checkrow"><input type="checkbox" name="notAppraisal" id="notAppraisal"><label for="notAppraisal">This inspection is for rent analysis data collection only and is not an appraisal.</label></div>
+</div></section>
+<section><h2>2. Breakdown / Square Footage / Rental Rates</h2><div class="note">Manual measurements needed. Do not rely on management. Fill in length x width of entire unit when square or rectangular. Individual room dimensions are not needed.</div><table><thead><tr><th>Unit #</th><th># Bedrooms</th><th># Baths</th><th>Length x Width</th><th>Total Unit Measurements</th></tr></thead><tbody>
+<tr><td><input name="unit1_no"></td><td><select name="unit1_bedrooms"><option value=""></option><option>Studio</option><option>1</option><option>2</option><option>3</option><option>4+</option></select></td><td><select name="unit1_baths"><option value=""></option><option>1</option><option>1.5</option><option>2</option><option>2.5</option><option>3+</option></select></td><td><input name="unit1_lw" placeholder="ex: 25 x 40"></td><td><input name="unit1_sf" placeholder="approx sf"></td></tr>
+<tr><td><input name="unit2_no"></td><td><select name="unit2_bedrooms"><option value=""></option><option>Studio</option><option>1</option><option>2</option><option>3</option><option>4+</option></select></td><td><select name="unit2_baths"><option value=""></option><option>1</option><option>1.5</option><option>2</option><option>2.5</option><option>3+</option></select></td><td><input name="unit2_lw" placeholder="ex: 25 x 40"></td><td><input name="unit2_sf" placeholder="approx sf"></td></tr>
+</tbody></table></section>
+<section><h2>3. Improvements - Components & Construction</h2><div class="qfield" data-letter="A" data-prompt="Type of construction frame?">
+      <label><strong>A.</strong> Type of construction frame?</label>
+      <select name="comp_A"><option value=""></option><option>Wood frame</option><option>Concrete block / CMU</option><option>Steel frame</option><option>Masonry</option><option>Mixed</option><option>Unknown</option><option>Other</option></select>
+      <textarea name="comp_A_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="B" data-prompt="Type of exterior facade?">
+      <label><strong>B.</strong> Type of exterior facade?</label>
+      <select name="comp_B"><option value=""></option><option>Stucco</option><option>Vinyl siding</option><option>Brick</option><option>Stone</option><option>Wood siding</option><option>Fiber cement</option><option>Concrete</option><option>Mixed</option><option>Unknown</option><option>Other</option></select>
+      <textarea name="comp_B_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="C" data-prompt="Type of interior walls?">
+      <label><strong>C.</strong> Type of interior walls?</label>
+      <select name="comp_C"><option value=""></option><option>Drywall</option><option>Plaster</option><option>Paneling</option><option>Concrete/Block</option><option>Mixed</option><option>Unknown</option><option>Other</option></select>
+      <textarea name="comp_C_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="D" data-prompt="Type of floor coverings?">
+      <label><strong>D.</strong> Type of floor coverings?</label>
+      <select name="comp_D"><option value=""></option><option>Carpet</option><option>Vinyl/LVP</option><option>Tile</option><option>Laminate</option><option>Wood</option><option>Concrete</option><option>Mixed</option><option>Other</option></select>
+      <textarea name="comp_D_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="E" data-prompt="Type of kitchen cabinets?">
+      <label><strong>E.</strong> Type of kitchen cabinets?</label>
+      <select name="comp_E"><option value=""></option><option>Wood</option><option>Laminate</option><option>Painted wood</option><option>Thermofoil</option><option>Metal</option><option>Original/dated</option><option>Updated</option><option>Unknown</option><option>Other</option></select>
+      <textarea name="comp_E_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="F" data-prompt="Material of countertops?">
+      <label><strong>F.</strong> Material of countertops?</label>
+      <select name="comp_F"><option value=""></option><option>Laminate</option><option>Granite</option><option>Quartz</option><option>Solid surface</option><option>Tile</option><option>Butcher block</option><option>Concrete</option><option>Unknown</option><option>Other</option></select>
+      <textarea name="comp_F_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="G" data-prompt="Type of ceilings?">
+      <label><strong>G.</strong> Type of ceilings?</label>
+      <select name="comp_G"><option value=""></option><option>Drywall</option><option>Textured drywall</option><option>Popcorn</option><option>Acoustic tile</option><option>Exposed</option><option>Vaulted</option><option>Unknown</option><option>Other</option></select>
+      <textarea name="comp_G_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="H" data-prompt="What type of windows?">
+      <label><strong>H.</strong> What type of windows?</label>
+      <select name="comp_H"><option value=""></option><option>Single pane</option><option>Double pane</option><option>Impact</option><option>Aluminum frame</option><option>Vinyl frame</option><option>Wood frame</option><option>Mixed</option><option>Unknown</option><option>Other</option></select>
+      <textarea name="comp_H_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="I" data-prompt="Front door - wood, steel, hollow core or solid?">
+      <label><strong>I.</strong> Front door - wood, steel, hollow core or solid?</label>
+      <select name="comp_I"><option value=""></option><option>Wood solid</option><option>Wood hollow core</option><option>Steel</option><option>Fiberglass</option><option>Glass/slider</option><option>Unknown</option><option>Other</option></select>
+      <textarea name="comp_I_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="J" data-prompt="Heating system?">
+      <label><strong>J.</strong> Heating system?</label>
+      <select name="comp_J"><option value=""></option><option>Forced hot air</option><option>Electric baseboard</option><option>Hot water baseboard</option><option>Heat pump</option><option>Wall unit</option><option>None</option><option>Unknown</option><option>Other</option></select>
+      <textarea name="comp_J_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="K" data-prompt="Central AC / wall units / none?">
+      <label><strong>K.</strong> Central AC / wall units / none?</label>
+      <select name="comp_K"><option value=""></option><option>Central AC</option><option>Wall/window units</option><option>Mini-split</option><option>None</option><option>Unknown</option><option>Other</option></select>
+      <textarea name="comp_K_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="L" data-prompt="Do tenants have their own thermostat?">
+      <label><strong>L.</strong> Do tenants have their own thermostat?</label>
+      <select name="comp_L"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option><option>N/A</option></select>
+      <textarea name="comp_L_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="M" data-prompt="Separate hot water heater in each unit?">
+      <label><strong>M.</strong> Separate hot water heater in each unit?</label>
+      <select name="comp_M"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option><option>N/A</option></select>
+      <textarea name="comp_M_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="N" data-prompt="Dishwasher / microwave?">
+      <label><strong>N.</strong> Dishwasher / microwave?</label>
+      <select name="comp_N"><option value=""></option><option>Dishwasher only</option><option>Microwave only</option><option>Both</option><option>Neither</option><option>Unknown</option></select>
+      <textarea name="comp_N_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="O" data-prompt="In-unit washer/dryer? Hookup? Management machines?">
+      <label><strong>O.</strong> In-unit washer/dryer? Hookup? Management machines?</label>
+      <select name="comp_O"><option value=""></option><option>In-unit washer/dryer</option><option>Hookup only</option><option>Management provided machines</option><option>None</option><option>Unknown</option><option>Other</option></select>
+      <textarea name="comp_O_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="P" data-prompt="Onsite laundry facility? How many washers/dryers?">
+      <label><strong>P.</strong> Onsite laundry facility? How many washers/dryers?</label>
+      <select name="comp_P"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option><option>N/A</option></select>
+      <textarea name="comp_P_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="Q" data-prompt="Balcony or patio?">
+      <label><strong>Q.</strong> Balcony or patio?</label>
+      <select name="comp_Q"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option><option>N/A</option></select>
+      <textarea name="comp_Q_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="R" data-prompt="Storage? Where, how large, cost?">
+      <label><strong>R.</strong> Storage? Where, how large, cost?</label>
+      <select name="comp_R"><option value=""></option><option>Yes - included</option><option>Yes - fee</option><option>No</option><option>Unknown</option><option>N/A</option></select>
+      <textarea name="comp_R_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="S" data-prompt="Security? Personnel/cameras? Crime issue?">
+      <label><strong>S.</strong> Security? Personnel/cameras? Crime issue?</label>
+      <select name="comp_S"><option value=""></option><option>Cameras</option><option>Personnel</option><option>Controlled access</option><option>None observed</option><option>Unknown</option><option>Other</option></select>
+      <textarea name="comp_S_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="T" data-prompt="Amenities? Community room, fitness, library, basketball, computer room?">
+      <label><strong>T.</strong> Amenities? Community room, fitness, library, basketball, computer room?</label>
+      <select name="comp_T"><option value=""></option><option>None observed</option><option>Community room</option><option>Fitness center</option><option>Library</option><option>Basketball court</option><option>Computer room</option><option>Multiple</option><option>Other</option></select>
+      <textarea name="comp_T_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="U" data-prompt="Recent renovations? When and what?">
+      <label><strong>U.</strong> Recent renovations? When and what?</label>
+      <select name="comp_U"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option></select>
+      <textarea name="comp_U_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="V" data-prompt="Elevator? How many?">
+      <label><strong>V.</strong> Elevator? How many?</label>
+      <select name="comp_V"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option><option>N/A</option></select>
+      <textarea name="comp_V_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="W" data-prompt="Deferred maintenance or capital improvements planned?">
+      <label><strong>W.</strong> Deferred maintenance or capital improvements planned?</label>
+      <select name="comp_W"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option></select>
+      <textarea name="comp_W_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="X" data-prompt="Secure entrances / intercom / key / fob?">
+      <label><strong>X.</strong> Secure entrances / intercom / key / fob?</label>
+      <select name="comp_X"><option value=""></option><option>Secure entry</option><option>Intercom</option><option>Key</option><option>Fob</option><option>Phone-based</option><option>No secure entry</option><option>Unknown</option><option>Other</option></select>
+      <textarea name="comp_X_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="Y" data-prompt="How many buildings are part of the community?">
+      <label><strong>Y.</strong> How many buildings are part of the community?</label>
+      <select name="comp_Y"><option value=""></option><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option><option>Unknown</option></select>
+      <textarea name="comp_Y_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="Z" data-prompt="Apartment entrances interior or exterior?">
+      <label><strong>Z.</strong> Apartment entrances interior or exterior?</label>
+      <select name="comp_Z"><option value=""></option><option>Interior</option><option>Exterior</option><option>Both</option><option>Unknown</option></select>
+      <textarea name="comp_Z_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="AA" data-prompt="Pull cords? Who does it alert?">
+      <label><strong>AA.</strong> Pull cords? Who does it alert?</label>
+      <select name="comp_AA"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option><option>N/A</option></select>
+      <textarea name="comp_AA_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="BB" data-prompt="Social Services Coordinator? Full/part time? Duties?">
+      <label><strong>BB.</strong> Social Services Coordinator? Full/part time? Duties?</label>
+      <select name="comp_BB"><option value=""></option><option>Full-time</option><option>Part-time</option><option>None</option><option>Unknown</option><option>N/A</option></select>
+      <textarea name="comp_BB_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="CC" data-prompt="Programs, events, or other services?">
+      <label><strong>CC.</strong> Programs, events, or other services?</label>
+      <select name="comp_CC"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option><option>N/A</option></select>
+      <textarea name="comp_CC_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="DD" data-prompt="Utilities: heat/stove/hot water; landlord vs tenant pays?">
+      <label><strong>DD.</strong> Utilities: heat/stove/hot water; landlord vs tenant pays?</label>
+      <select name="comp_DD"><option value=""></option><option>Landlord pays all</option><option>Tenant pays all</option><option>Split utilities</option><option>Included in rent</option><option>Unknown</option><option>Other</option></select>
+      <textarea name="comp_DD_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="EE" data-prompt="Overall condition?">
+      <label><strong>EE.</strong> Overall condition?</label>
+      <select name="comp_EE"><option value=""></option><option>Excellent</option><option>Good</option><option>Average</option><option>Fair</option><option>Poor</option><option>Mixed</option><option>Unknown</option></select>
+      <textarea name="comp_EE_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="FF" data-prompt="Free cable and/or internet? Where?">
+      <label><strong>FF.</strong> Free cable and/or internet? Where?</label>
+      <select name="comp_FF"><option value=""></option><option>Cable included</option><option>Internet included</option><option>Both included</option><option>Common areas only</option><option>Not included</option><option>Unknown</option></select>
+      <textarea name="comp_FF_details" placeholder="Details / notes / other"></textarea>
+    </div><div class="qfield" data-letter="GG" data-prompt="Additional amenities: bike racks, vending, lockers, dog park, EV charging, etc.">
+      <label><strong>GG.</strong> Additional amenities: bike racks, vending, lockers, dog park, EV charging, etc.</label>
+      <select name="comp_GG"><option value=""></option><option>None observed</option><option>Bike racks</option><option>Vending</option><option>Package lockers</option><option>Dog park</option><option>EV charging</option><option>Multiple</option><option>Other</option></select>
+      <textarea name="comp_GG_details" placeholder="Details / notes / other"></textarea>
+    </div></section>
+<section><h2>4. Additional Questions</h2><div class="grid">
+<div class="field"><label>Parking available to residents?</label><select name="parkingAvailable"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option></select></div><div class="field"><label>Parking type</label><select name="parkingType"><option value=""></option><option>Lot</option><option>Garage</option><option>Carport</option><option>Street</option><option>Assigned lot</option><option>Mixed</option><option>Other</option></select></div>
+<div class="field"><label>Parking fee?</label><select name="parkingFee"><option value=""></option><option>No</option><option>Yes</option><option>Unknown</option></select></div><div class="field"><label>Parking fee amount</label><input name="parkingFeeAmount"></div>
+<div class="field"><label>Approx. number of spaces</label><input name="parkingSpaces"></div><div class="field"><label>Assigned spaces?</label><select name="assignedSpaces"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option></select></div>
+<div class="field"><label>Approx. handicap spaces</label><input name="handicapSpaces"></div><div class="field"><label>Occupancy rate</label><input name="occupancyRate"></div>
+<div class="field"><label>Waiting list?</label><select name="waitingList"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option></select></div><div class="field"><label>One bedroom waiting list?</label><select name="wait1br"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option><option>N/A</option></select></div>
+<div class="field"><label>Two bedroom waiting list?</label><select name="wait2br"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option><option>N/A</option></select></div><div class="field"><label>Three bedroom waiting list?</label><select name="wait3br"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option><option>N/A</option></select></div>
+<div class="field"><label>Estimated wait time</label><input name="waitTime"></div><div class="field"><label>Non-Section 8 housing also?</label><select name="nonSection8"><option value=""></option><option>Yes</option><option>No</option><option>Unknown</option></select></div>
+<div class="field full"><label>Non-Section 8 unit breakdown / restrictions</label><textarea name="nonSection8Details"></textarea></div>
+</div></section>
+<section><h2>5. Required Photo Collection</h2><div class="note">Use these photo fields on the iPad. Keep backup photos in the iPad camera roll too.</div><h3>Subject</h3><div class="photoBox" data-key="Subject_0" data-label="Subject - Street view in front of Subject (East/North)">
+        <label>Street view in front of Subject (East/North)</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Subject_0')">
+        <div class="thumbs" id="thumbs_Subject_0"></div>
+      </div><div class="photoBox" data-key="Subject_1" data-label="Subject - Street view in front of Subject (West/South)">
+        <label>Street view in front of Subject (West/South)</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Subject_1')">
+        <div class="thumbs" id="thumbs_Subject_1"></div>
+      </div><h3>Exterior</h3><div class="photoBox" data-key="Exterior_0" data-label="Exterior - Front of subject">
+        <label>Front of subject</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Exterior_0')">
+        <div class="thumbs" id="thumbs_Exterior_0"></div>
+      </div><div class="photoBox" data-key="Exterior_1" data-label="Exterior - Rear of subject">
+        <label>Rear of subject</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Exterior_1')">
+        <div class="thumbs" id="thumbs_Exterior_1"></div>
+      </div><div class="photoBox" data-key="Exterior_2" data-label="Exterior - Left side of subject">
+        <label>Left side of subject</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Exterior_2')">
+        <div class="thumbs" id="thumbs_Exterior_2"></div>
+      </div><div class="photoBox" data-key="Exterior_3" data-label="Exterior - Right side of subject">
+        <label>Right side of subject</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Exterior_3')">
+        <div class="thumbs" id="thumbs_Exterior_3"></div>
+      </div><div class="photoBox" data-key="Exterior_4" data-label="Exterior - Parking lot">
+        <label>Parking lot</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Exterior_4')">
+        <div class="thumbs" id="thumbs_Exterior_4"></div>
+      </div><div class="photoBox" data-key="Exterior_5" data-label="Exterior - Grassy area">
+        <label>Grassy area</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Exterior_5')">
+        <div class="thumbs" id="thumbs_Exterior_5"></div>
+      </div><div class="photoBox" data-key="Exterior_6" data-label="Exterior - Playground">
+        <label>Playground</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Exterior_6')">
+        <div class="thumbs" id="thumbs_Exterior_6"></div>
+      </div><div class="photoBox" data-key="Exterior_7" data-label="Exterior - Property Signage">
+        <label>Property Signage</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Exterior_7')">
+        <div class="thumbs" id="thumbs_Exterior_7"></div>
+      </div><div class="photoBox" data-key="Exterior_8" data-label="Exterior - Picnic area / patio">
+        <label>Picnic area / patio</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Exterior_8')">
+        <div class="thumbs" id="thumbs_Exterior_8"></div>
+      </div><h3>Interior/Common Areas</h3><div class="photoBox" data-key="Interior_Common_Areas_0" data-label="Interior/Common Areas - Management office">
+        <label>Management office</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Interior_Common_Areas_0')">
+        <div class="thumbs" id="thumbs_Interior_Common_Areas_0"></div>
+      </div><div class="photoBox" data-key="Interior_Common_Areas_1" data-label="Interior/Common Areas - Front Entrance/Lobby Area">
+        <label>Front Entrance/Lobby Area</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Interior_Common_Areas_1')">
+        <div class="thumbs" id="thumbs_Interior_Common_Areas_1"></div>
+      </div><div class="photoBox" data-key="Interior_Common_Areas_2" data-label="Interior/Common Areas - Mail Room/Package Room Area">
+        <label>Mail Room/Package Room Area</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Interior_Common_Areas_2')">
+        <div class="thumbs" id="thumbs_Interior_Common_Areas_2"></div>
+      </div><div class="photoBox" data-key="Interior_Common_Areas_3" data-label="Interior/Common Areas - Elevator Bank">
+        <label>Elevator Bank</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Interior_Common_Areas_3')">
+        <div class="thumbs" id="thumbs_Interior_Common_Areas_3"></div>
+      </div><div class="photoBox" data-key="Interior_Common_Areas_4" data-label="Interior/Common Areas - Laundry Room">
+        <label>Laundry Room</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Interior_Common_Areas_4')">
+        <div class="thumbs" id="thumbs_Interior_Common_Areas_4"></div>
+      </div><div class="photoBox" data-key="Interior_Common_Areas_5" data-label="Interior/Common Areas - Clubhouse">
+        <label>Clubhouse</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Interior_Common_Areas_5')">
+        <div class="thumbs" id="thumbs_Interior_Common_Areas_5"></div>
+      </div><div class="photoBox" data-key="Interior_Common_Areas_6" data-label="Interior/Common Areas - Common Kitchen">
+        <label>Common Kitchen</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Interior_Common_Areas_6')">
+        <div class="thumbs" id="thumbs_Interior_Common_Areas_6"></div>
+      </div><div class="photoBox" data-key="Interior_Common_Areas_7" data-label="Interior/Common Areas - Basketball Court">
+        <label>Basketball Court</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Interior_Common_Areas_7')">
+        <div class="thumbs" id="thumbs_Interior_Common_Areas_7"></div>
+      </div><div class="photoBox" data-key="Interior_Common_Areas_8" data-label="Interior/Common Areas - Fitness Center">
+        <label>Fitness Center</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Interior_Common_Areas_8')">
+        <div class="thumbs" id="thumbs_Interior_Common_Areas_8"></div>
+      </div><div class="photoBox" data-key="Interior_Common_Areas_9" data-label="Interior/Common Areas - Community room / meeting room">
+        <label>Community room / meeting room</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Interior_Common_Areas_9')">
+        <div class="thumbs" id="thumbs_Interior_Common_Areas_9"></div>
+      </div><div class="photoBox" data-key="Interior_Common_Areas_10" data-label="Interior/Common Areas - Any other common area spaces">
+        <label>Any other common area spaces</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Interior_Common_Areas_10')">
+        <div class="thumbs" id="thumbs_Interior_Common_Areas_10"></div>
+      </div><h3>Unit 1 Interior</h3><div class="photoBox" data-key="Unit_1_Interior_0" data-label="Unit 1 Interior - Living Room">
+        <label>Living Room</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_1_Interior_0')">
+        <div class="thumbs" id="thumbs_Unit_1_Interior_0"></div>
+      </div><div class="photoBox" data-key="Unit_1_Interior_1" data-label="Unit 1 Interior - Dining Room">
+        <label>Dining Room</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_1_Interior_1')">
+        <div class="thumbs" id="thumbs_Unit_1_Interior_1"></div>
+      </div><div class="photoBox" data-key="Unit_1_Interior_2" data-label="Unit 1 Interior - Kitchen">
+        <label>Kitchen</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_1_Interior_2')">
+        <div class="thumbs" id="thumbs_Unit_1_Interior_2"></div>
+      </div><div class="photoBox" data-key="Unit_1_Interior_3" data-label="Unit 1 Interior - Bedroom 1">
+        <label>Bedroom 1</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_1_Interior_3')">
+        <div class="thumbs" id="thumbs_Unit_1_Interior_3"></div>
+      </div><div class="photoBox" data-key="Unit_1_Interior_4" data-label="Unit 1 Interior - Bedroom 2 if applicable">
+        <label>Bedroom 2 if applicable</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_1_Interior_4')">
+        <div class="thumbs" id="thumbs_Unit_1_Interior_4"></div>
+      </div><div class="photoBox" data-key="Unit_1_Interior_5" data-label="Unit 1 Interior - Bedroom 3 if applicable">
+        <label>Bedroom 3 if applicable</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_1_Interior_5')">
+        <div class="thumbs" id="thumbs_Unit_1_Interior_5"></div>
+      </div><div class="photoBox" data-key="Unit_1_Interior_6" data-label="Unit 1 Interior - Bathroom 1">
+        <label>Bathroom 1</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_1_Interior_6')">
+        <div class="thumbs" id="thumbs_Unit_1_Interior_6"></div>
+      </div><div class="photoBox" data-key="Unit_1_Interior_7" data-label="Unit 1 Interior - Bathroom 2 if applicable">
+        <label>Bathroom 2 if applicable</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_1_Interior_7')">
+        <div class="thumbs" id="thumbs_Unit_1_Interior_7"></div>
+      </div><div class="photoBox" data-key="Unit_1_Interior_8" data-label="Unit 1 Interior - Half Bathroom if applicable">
+        <label>Half Bathroom if applicable</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_1_Interior_8')">
+        <div class="thumbs" id="thumbs_Unit_1_Interior_8"></div>
+      </div><div class="photoBox" data-key="Unit_1_Interior_9" data-label="Unit 1 Interior - Patio/Porch if applicable">
+        <label>Patio/Porch if applicable</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_1_Interior_9')">
+        <div class="thumbs" id="thumbs_Unit_1_Interior_9"></div>
+      </div><div class="photoBox" data-key="Unit_1_Interior_10" data-label="Unit 1 Interior - Laundry / Washer-Dryer area if applicable">
+        <label>Laundry / Washer-Dryer area if applicable</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_1_Interior_10')">
+        <div class="thumbs" id="thumbs_Unit_1_Interior_10"></div>
+      </div><div class="photoBox" data-key="Unit_1_Interior_11" data-label="Unit 1 Interior - HVAC / Water Heater / Mechanical if visible">
+        <label>HVAC / Water Heater / Mechanical if visible</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_1_Interior_11')">
+        <div class="thumbs" id="thumbs_Unit_1_Interior_11"></div>
+      </div><div class="photoBox" data-key="Unit_1_Interior_12" data-label="Unit 1 Interior - Condition issue photos">
+        <label>Condition issue photos</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_1_Interior_12')">
+        <div class="thumbs" id="thumbs_Unit_1_Interior_12"></div>
+      </div><div class="photoBox" data-key="Unit_1_Interior_13" data-label="Unit 1 Interior - Additional photos">
+        <label>Additional photos</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_1_Interior_13')">
+        <div class="thumbs" id="thumbs_Unit_1_Interior_13"></div>
+      </div><h3>Unit 2 Interior</h3><div class="photoBox" data-key="Unit_2_Interior_0" data-label="Unit 2 Interior - Living Room">
+        <label>Living Room</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_2_Interior_0')">
+        <div class="thumbs" id="thumbs_Unit_2_Interior_0"></div>
+      </div><div class="photoBox" data-key="Unit_2_Interior_1" data-label="Unit 2 Interior - Dining Room">
+        <label>Dining Room</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_2_Interior_1')">
+        <div class="thumbs" id="thumbs_Unit_2_Interior_1"></div>
+      </div><div class="photoBox" data-key="Unit_2_Interior_2" data-label="Unit 2 Interior - Kitchen">
+        <label>Kitchen</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_2_Interior_2')">
+        <div class="thumbs" id="thumbs_Unit_2_Interior_2"></div>
+      </div><div class="photoBox" data-key="Unit_2_Interior_3" data-label="Unit 2 Interior - Bedroom 1">
+        <label>Bedroom 1</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_2_Interior_3')">
+        <div class="thumbs" id="thumbs_Unit_2_Interior_3"></div>
+      </div><div class="photoBox" data-key="Unit_2_Interior_4" data-label="Unit 2 Interior - Bedroom 2 if applicable">
+        <label>Bedroom 2 if applicable</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_2_Interior_4')">
+        <div class="thumbs" id="thumbs_Unit_2_Interior_4"></div>
+      </div><div class="photoBox" data-key="Unit_2_Interior_5" data-label="Unit 2 Interior - Bedroom 3 if applicable">
+        <label>Bedroom 3 if applicable</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_2_Interior_5')">
+        <div class="thumbs" id="thumbs_Unit_2_Interior_5"></div>
+      </div><div class="photoBox" data-key="Unit_2_Interior_6" data-label="Unit 2 Interior - Bathroom 1">
+        <label>Bathroom 1</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_2_Interior_6')">
+        <div class="thumbs" id="thumbs_Unit_2_Interior_6"></div>
+      </div><div class="photoBox" data-key="Unit_2_Interior_7" data-label="Unit 2 Interior - Bathroom 2 if applicable">
+        <label>Bathroom 2 if applicable</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_2_Interior_7')">
+        <div class="thumbs" id="thumbs_Unit_2_Interior_7"></div>
+      </div><div class="photoBox" data-key="Unit_2_Interior_8" data-label="Unit 2 Interior - Half Bathroom if applicable">
+        <label>Half Bathroom if applicable</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_2_Interior_8')">
+        <div class="thumbs" id="thumbs_Unit_2_Interior_8"></div>
+      </div><div class="photoBox" data-key="Unit_2_Interior_9" data-label="Unit 2 Interior - Patio/Porch if applicable">
+        <label>Patio/Porch if applicable</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_2_Interior_9')">
+        <div class="thumbs" id="thumbs_Unit_2_Interior_9"></div>
+      </div><div class="photoBox" data-key="Unit_2_Interior_10" data-label="Unit 2 Interior - Laundry / Washer-Dryer area if applicable">
+        <label>Laundry / Washer-Dryer area if applicable</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_2_Interior_10')">
+        <div class="thumbs" id="thumbs_Unit_2_Interior_10"></div>
+      </div><div class="photoBox" data-key="Unit_2_Interior_11" data-label="Unit 2 Interior - HVAC / Water Heater / Mechanical if visible">
+        <label>HVAC / Water Heater / Mechanical if visible</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_2_Interior_11')">
+        <div class="thumbs" id="thumbs_Unit_2_Interior_11"></div>
+      </div><div class="photoBox" data-key="Unit_2_Interior_12" data-label="Unit 2 Interior - Condition issue photos">
+        <label>Condition issue photos</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_2_Interior_12')">
+        <div class="thumbs" id="thumbs_Unit_2_Interior_12"></div>
+      </div><div class="photoBox" data-key="Unit_2_Interior_13" data-label="Unit 2 Interior - Additional photos">
+        <label>Additional photos</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Unit_2_Interior_13')">
+        <div class="thumbs" id="thumbs_Unit_2_Interior_13"></div>
+      </div><h3>Comparable Property Exterior Photos</h3><div class="photoBox" data-key="Comparable_Property_Exterior_Photos_0" data-label="Comparable Property Exterior Photos - Comp #1 exterior photo">
+        <label>Comp #1 exterior photo</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Comparable_Property_Exterior_Photos_0')">
+        <div class="thumbs" id="thumbs_Comparable_Property_Exterior_Photos_0"></div>
+      </div><div class="photoBox" data-key="Comparable_Property_Exterior_Photos_1" data-label="Comparable Property Exterior Photos - Comp #2 exterior photo">
+        <label>Comp #2 exterior photo</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Comparable_Property_Exterior_Photos_1')">
+        <div class="thumbs" id="thumbs_Comparable_Property_Exterior_Photos_1"></div>
+      </div><div class="photoBox" data-key="Comparable_Property_Exterior_Photos_2" data-label="Comparable Property Exterior Photos - Comp #3 exterior photo">
+        <label>Comp #3 exterior photo</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Comparable_Property_Exterior_Photos_2')">
+        <div class="thumbs" id="thumbs_Comparable_Property_Exterior_Photos_2"></div>
+      </div><div class="photoBox" data-key="Comparable_Property_Exterior_Photos_3" data-label="Comparable Property Exterior Photos - Comp #4 exterior photo">
+        <label>Comp #4 exterior photo</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Comparable_Property_Exterior_Photos_3')">
+        <div class="thumbs" id="thumbs_Comparable_Property_Exterior_Photos_3"></div>
+      </div><div class="photoBox" data-key="Comparable_Property_Exterior_Photos_4" data-label="Comparable Property Exterior Photos - Comp #5 exterior photo">
+        <label>Comp #5 exterior photo</label>
+        <input type="file" accept="image/*" capture="environment" multiple onchange="handleFiles(event,'Comparable_Property_Exterior_Photos_4')">
+        <div class="thumbs" id="thumbs_Comparable_Property_Exterior_Photos_4"></div>
+      </div></section>
+<section><h2>6. Final Notes and Confirmation</h2><div class="grid"><div class="field"><label>Items not accessible</label><textarea name="notAccessible"></textarea></div><div class="field"><label>Items not applicable</label><textarea name="notApplicable"></textarea></div><div class="field full"><label>Additional observations</label><textarea name="additionalObservations"></textarea></div><div class="field full checkrow"><input type="checkbox" name="confirmAccurate" id="confirmAccurate"><label for="confirmAccurate">I confirm that the information and photos collected reflect my observations at the time of inspection.</label></div></div></section>
+</form>
+<div id="report"></div>
+</main>
+<script>
+let photos={};
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function photoBoxes(){return Array.from(document.querySelectorAll('.photoBox'))}
+function handleFiles(ev,key){const files=Array.from(ev.target.files||[]); files.forEach(file=>{const reader=new FileReader(); reader.onload=e=>resizeImage(e.target.result,1200,0.82).then(data=>{photos[key]=photos[key]||[]; photos[key].push({name:file.name,data}); renderThumbs(key); saveData(false);}); reader.readAsDataURL(file);}); ev.target.value='';}
+function resizeImage(dataUrl,maxW,quality){return new Promise(resolve=>{const img=new Image(); img.onload=()=>{const scale=Math.min(1,maxW/img.width); const canvas=document.createElement('canvas'); canvas.width=Math.round(img.width*scale); canvas.height=Math.round(img.height*scale); canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height); resolve(canvas.toDataURL('image/jpeg',quality));}; img.src=dataUrl;})}
+function renderThumbs(key){const el=document.getElementById('thumbs_'+key); if(!el)return; el.innerHTML=''; (photos[key]||[]).forEach((ph,i)=>{const d=document.createElement('div'); d.className='thumb'; d.innerHTML=`<img src="${ph.data}"><span>${esc(ph.name||'Photo')}</span><button type="button" onclick="removePhoto('${key}',${i})">Remove</button>`; el.appendChild(d);})}
+function removePhoto(key,i){(photos[key]||[]).splice(i,1); renderThumbs(key); saveData(false)}
+function getData(){const fd=new FormData(document.getElementById('formArea')); const data={}; for(const [k,v] of fd.entries())data[k]=v; document.querySelectorAll('input[type=checkbox]').forEach(cb=>data[cb.name]=cb.checked); return {version:'4.0-ipad-safe', savedAt:new Date().toISOString(), data, photos}}
+function setData(obj){if(!obj)return; const f=document.getElementById('formArea'); Object.entries(obj.data||{}).forEach(([k,v])=>{const el=f.elements[k]; if(!el)return; if(el.type==='checkbox')el.checked=!!v; else el.value=v;}); photos=obj.photos||{}; Object.keys(photos).forEach(renderThumbs)}
+function saveData(alertUser=true){try{localStorage.setItem('RCSInspectionAppV4',JSON.stringify(getData())); if(alertUser)alert('Saved on this device/browser.')}catch(e){alert('Save failed. Photos may be too large for browser storage. Create PDF now and/or export backup JSON.')}}
+function loadData(alertUser=true){const raw=localStorage.getItem('RCSInspectionAppV4'); if(raw){setData(JSON.parse(raw)); if(alertUser)alert('Saved data reloaded.')} else if(alertUser) alert('No saved data found in this browser.')}
+function clearAll(){if(confirm('Clear all form data and photos on this device?')){localStorage.removeItem('RCSInspectionAppV4'); location.reload();}}
+function exportJSON(){const blob=new Blob([JSON.stringify(getData(),null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='RCS_inspection_backup_'+new Date().toISOString().slice(0,10)+'.json'; a.click();}
+function importJSON(ev){const file=ev.target.files[0]; if(!file)return; const r=new FileReader(); r.onload=e=>{setData(JSON.parse(e.target.result)); saveData(false); alert('Imported backup JSON.')}; r.readAsText(file);}
+function buildReport(){saveData(false); const obj=getData(), d=obj.data; const val=k=>esc(d[k]||'');
+const compRows=Array.from(document.querySelectorAll('.qfield')).map(q=>{const letter=q.dataset.letter, prompt=q.dataset.prompt, sel=q.querySelector('select').name; const ans=[d[sel],d[sel+'_details']].filter(Boolean).join(' - '); return `<tr><td class="qLetter">${esc(letter)}</td><td>${esc(prompt)}</td><td class="qAnswer">${esc(ans)}</td></tr>`}).join('');
+const addRows=[['1','Is there parking available to residents? What type? Fee? Spaces? Handicap spaces?',[d.parkingAvailable,d.parkingType,d.parkingFee,d.parkingFeeAmount,d.parkingSpaces,d.assignedSpaces,d.handicapSpaces].filter(Boolean).join(' | ')],['2','Occupancy rate / waiting list by unit type / estimated wait time',[d.occupancyRate,d.waitingList,'1BR: '+(d.wait1br||''),'2BR: '+(d.wait2br||''),'3BR: '+(d.wait3br||''),d.waitTime].filter(Boolean).join(' | ')],['3','Does this property have non-Section 8 housing? Unit breakdown? Restrictions?',[d.nonSection8,d.nonSection8Details].filter(Boolean).join(' - ')]].map(r=>`<tr><td class="qLetter">${r[0]}</td><td>${esc(r[1])}</td><td class="qAnswer">${esc(r[2]||'')}</td></tr>`).join('');
+let h=`<div class="reportPage"><div>Inspector Name: <span class="fieldLine" style="width:2.35in">${val('inspectorName')}</span> Date: <span class="fieldLine" style="width:1.3in">${val('inspectionDate')}</span></div><div>Name of Subject: <span class="fieldLine" style="width:5.7in">${val('subjectName')}</span></div><div>Address: <span class="fieldLine" style="width:3.1in">${val('address')}</span> City: <span class="fieldLine" style="width:1.2in">${val('city')}</span> State: <span class="fieldLine" style="width:.55in">${val('state')}</span> Zip: <span class="fieldLine" style="width:.75in">${val('zip')}</span></div><div>Phone # <span class="fieldLine" style="width:1.6in">${val('phone')}</span> On Site Contact <span class="fieldLine" style="width:2.15in">${val('contact')}</span> County <span class="fieldLine" style="width:1in">${val('county')}</span></div><div class="origTitle">BREAKDOWN/SQUARE FOOTAGE/RENTAL RATES:</div><div class="origSub">Please inspect one of each Unit type at the subject</div><table><tr><th>Unit #</th><th># Bedrooms</th><th># Baths</th><th>Length x Width</th><th>Total Unit Measurements</th></tr><tr><td>${val('unit1_no')}</td><td>${val('unit1_bedrooms')}</td><td>${val('unit1_baths')}</td><td>${val('unit1_lw')}</td><td>${val('unit1_sf')}</td></tr><tr><td>${val('unit2_no')}</td><td>${val('unit2_bedrooms')}</td><td>${val('unit2_baths')}</td><td>${val('unit2_lw')}</td><td>${val('unit2_sf')}</td></tr></table><div class="origSub">**MANUAL MEASUREMENTS NEEDED (do not rely on management please!)</div><div class="origTitle">Improvements - Components & Construction</div><table>${compRows}</table></div><div class="reportPage"><div class="origTitle">ADDITIONAL QUESTIONS:</div><table>${addRows}</table><div><strong>Items not accessible:</strong> ${val('notAccessible')}</div><div><strong>Items not applicable:</strong> ${val('notApplicable')}</div><div><strong>Additional observations:</strong> ${val('additionalObservations')}</div><div class="origTitle">PHOTO CHECKLIST:</div><div class="photoChecklist">`;
+photoBoxes().forEach(box=>{const key=box.dataset.key, label=box.dataset.label; const checked=(obj.photos[key]||[]).length?'✓':''; h+=`<div class="checkItem"><span class="box">${checked}</span>${esc(label)}</div>`;}); h+='</div></div>';
+let cards=''; photoBoxes().forEach(box=>{const key=box.dataset.key, label=box.dataset.label; (obj.photos[key]||[]).forEach((ph,i)=>{cards+=`<div class="photoCard"><div class="caption">${esc(label)}</div><div class="small">${esc(ph.name||('Photo '+(i+1)))}</div><img src="${ph.data}"></div>`;})});
+h+=`<div class="reportPage"><div class="origTitle">PHOTO ADDENDUM</div><div class="photoGrid">${cards||'<p>No photos attached.</p>'}</div></div>`; document.getElementById('report').innerHTML=h; window.print();}
+window.addEventListener('load',()=>{try{loadData(false)}catch(e){}});
+</script>
+</body></html>
